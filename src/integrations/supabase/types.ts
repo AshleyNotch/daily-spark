@@ -14,7 +14,135 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      brands: {
+        Row: {
+          active_deliverables: string | null
+          color: string
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          user_id: string
+        }
+        Insert: {
+          active_deliverables?: string | null
+          color?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          user_id: string
+        }
+        Update: {
+          active_deliverables?: string | null
+          color?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      morning_sessions: {
+        Row: {
+          completed: boolean
+          created_at: string
+          date: string
+          energy_level: number | null
+          focus_brands: string[] | null
+          id: string
+          notes: string | null
+          user_id: string
+        }
+        Insert: {
+          completed?: boolean
+          created_at?: string
+          date: string
+          energy_level?: number | null
+          focus_brands?: string[] | null
+          id?: string
+          notes?: string | null
+          user_id: string
+        }
+        Update: {
+          completed?: boolean
+          created_at?: string
+          date?: string
+          energy_level?: number | null
+          focus_brands?: string[] | null
+          id?: string
+          notes?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      tasks: {
+        Row: {
+          brand_id: string | null
+          created_at: string
+          created_from: string
+          deadline: string | null
+          description: string | null
+          energy_required: string
+          estimated_minutes: number | null
+          id: string
+          priority: number
+          session_id: string | null
+          status: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          brand_id?: string | null
+          created_at?: string
+          created_from?: string
+          deadline?: string | null
+          description?: string | null
+          energy_required?: string
+          estimated_minutes?: number | null
+          id?: string
+          priority?: number
+          session_id?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          brand_id?: string | null
+          created_at?: string
+          created_from?: string
+          deadline?: string | null
+          description?: string | null
+          energy_required?: string
+          estimated_minutes?: number | null
+          id?: string
+          priority?: number
+          session_id?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tasks_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tasks_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "morning_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
