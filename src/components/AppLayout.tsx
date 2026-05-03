@@ -1,8 +1,7 @@
 import { ReactNode, useEffect, useState } from "react";
-import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
-import { LayoutDashboard, Palette, Settings, LogOut, Zap, Menu } from "lucide-react";
+import { Link, useRouterState } from "@tanstack/react-router";
+import { LayoutDashboard, Palette, Settings, Zap, Menu } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/lib/auth";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
@@ -15,34 +14,14 @@ const NAV = [
 ];
 
 export default function AppLayout({ children }: { children: ReactNode }) {
-  const { user, loading } = useAuth();
-  const navigate = useNavigate();
   const path = useRouterState({ select: (s) => s.location.pathname });
   const [brands, setBrands] = useState<Brand[]>([]);
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
-    if (loading) return;
-    if (!user) navigate({ to: "/" });
-  }, [user, loading, navigate]);
-
-  useEffect(() => {
-    if (!user) return;
-    supabase
-      .from("brands")
-      .select("id,name,color")
-      .order("name")
+    supabase.from("brands").select("id,name,color").order("name")
       .then(({ data }) => setBrands(data ?? []));
-  }, [user, path]);
-
-  if (loading || !user) {
-    return <div className="min-h-screen flex items-center justify-center text-muted-foreground">Loading…</div>;
-  }
-
-  const logout = async () => {
-    await supabase.auth.signOut();
-    navigate({ to: "/" });
-  };
+  }, [path]);
 
   return (
     <div className="min-h-screen flex w-full bg-background">
@@ -93,25 +72,13 @@ export default function AppLayout({ children }: { children: ReactNode }) {
             <Link
               key={b.id}
               to="/dashboard"
-              search={{ brand: b.id } as never}
+              search={{ brand: b.id }}
               className="flex items-center gap-2.5 px-3 py-1.5 rounded-md text-sm text-sidebar-foreground/80 hover:bg-sidebar-accent/60"
             >
               <span className="h-2.5 w-2.5 rounded-full" style={{ background: b.color }} />
               <span className="truncate">{b.name}</span>
             </Link>
           ))}
-        </div>
-
-        <div className="border-t border-sidebar-border p-3 flex items-center gap-2">
-          <div className="h-8 w-8 rounded-full bg-primary/10 text-primary flex items-center justify-center text-sm font-semibold">
-            {user.email?.[0]?.toUpperCase()}
-          </div>
-          <div className="flex-1 min-w-0">
-            <div className="text-xs truncate text-sidebar-foreground">{user.email}</div>
-          </div>
-          <Button variant="ghost" size="icon" onClick={logout} aria-label="Log out">
-            <LogOut className="h-4 w-4" />
-          </Button>
         </div>
       </aside>
 
