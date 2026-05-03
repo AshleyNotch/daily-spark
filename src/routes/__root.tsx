@@ -32,12 +32,10 @@ export const Route = createRootRoute({
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: "Daytask — Smart daily task manager" },
       { name: "description", content: "A smart daily task manager for design agency founders juggling multiple client brands." },
-      { name: "author", content: "Lovable" },
       { property: "og:title", content: "Daytask" },
       { property: "og:description", content: "Smart daily task manager for multi-brand work." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
-      { name: "twitter:site", content: "@Lovable" },
     ],
     links: [
       {
