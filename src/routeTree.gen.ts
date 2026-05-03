@@ -11,7 +11,6 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as MorningRouteImport } from './routes/morning'
-import { Route as ApiMorningRouteImport } from './routes/api/morning'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as BrandsRouteImport } from './routes/brands'
 import { Route as IndexRouteImport } from './routes/index'
@@ -24,11 +23,6 @@ const SettingsRoute = SettingsRouteImport.update({
 const MorningRoute = MorningRouteImport.update({
   id: '/morning',
   path: '/morning',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiMorningRoute = ApiMorningRouteImport.update({
-  id: '/api/morning',
-  path: '/api/morning',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DashboardRoute = DashboardRouteImport.update({
@@ -53,7 +47,6 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof DashboardRoute
   '/morning': typeof MorningRoute
   '/settings': typeof SettingsRoute
-  '/api/morning': typeof ApiMorningRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -61,7 +54,6 @@ export interface FileRoutesByTo {
   '/dashboard': typeof DashboardRoute
   '/morning': typeof MorningRoute
   '/settings': typeof SettingsRoute
-  '/api/morning': typeof ApiMorningRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -70,14 +62,13 @@ export interface FileRoutesById {
   '/dashboard': typeof DashboardRoute
   '/morning': typeof MorningRoute
   '/settings': typeof SettingsRoute
-  '/api/morning': typeof ApiMorningRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/brands' | '/dashboard' | '/morning' | '/settings' | '/api/morning'
+  fullPaths: '/' | '/brands' | '/dashboard' | '/morning' | '/settings'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/brands' | '/dashboard' | '/morning' | '/settings' | '/api/morning'
-  id: '__root__' | '/' | '/brands' | '/dashboard' | '/morning' | '/settings' | '/api/morning'
+  to: '/' | '/brands' | '/dashboard' | '/morning' | '/settings'
+  id: '__root__' | '/' | '/brands' | '/dashboard' | '/morning' | '/settings'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -86,7 +77,6 @@ export interface RootRouteChildren {
   DashboardRoute: typeof DashboardRoute
   MorningRoute: typeof MorningRoute
   SettingsRoute: typeof SettingsRoute
-  ApiMorningRoute: typeof ApiMorningRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -103,13 +93,6 @@ declare module '@tanstack/react-router' {
       path: '/morning'
       fullPath: '/morning'
       preLoaderRoute: typeof MorningRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/morning': {
-      id: '/api/morning'
-      path: '/api/morning'
-      fullPath: '/api/morning'
-      preLoaderRoute: typeof ApiMorningRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/dashboard': {
@@ -142,7 +125,6 @@ const rootRouteChildren: RootRouteChildren = {
   DashboardRoute: DashboardRoute,
   MorningRoute: MorningRoute,
   SettingsRoute: SettingsRoute,
-  ApiMorningRoute: ApiMorningRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

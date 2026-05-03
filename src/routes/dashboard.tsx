@@ -1,7 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { format, differenceInHours, parseISO } from "date-fns";
-import { Plus, Sparkles, MoreHorizontal } from "lucide-react";
+import { Plus, Sparkles, MoreHorizontal, ArrowRight } from "lucide-react";
+import { useAuth } from "@/lib/auth";
 import {
   DndContext, DragEndEvent, useDraggable, useDroppable, PointerSensor, useSensor, useSensors,
 } from "@dnd-kit/core";
@@ -19,7 +20,7 @@ import { EnergyLabel } from "@/components/EnergyLabel";
 import { BrandBadge } from "@/components/BrandBadge";
 
 type Brand = { id: string; name: string; color: string };
-type Task = TaskRow & { id: string; brand?: Brand | null };
+type Task = TaskRow & { id: string; brand?: Brand | null; session_id?: string | null };
 
 export const Route = createFileRoute("/dashboard")({
   validateSearch: (s: Record<string, unknown>) => ({
@@ -38,6 +39,7 @@ function deadlineUrgent(d?: string | null, status?: string) {
 }
 
 function DashboardPage() {
+  const { user } = useAuth();
   const { brand: brandFilter } = Route.useSearch();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [brands, setBrands] = useState<Brand[]>([]);
@@ -45,6 +47,15 @@ function DashboardPage() {
   const [panelOpen, setPanelOpen] = useState(false);
   const [editing, setEditing] = useState<Task | null>(null);
   const [hasSession, setHasSession] = useState<boolean | null>(null);
+  const [todaySessionId, setTodaySessionId] = useState<string | null>(null);
+
+  const firstName = (() => {
+    const meta = user?.user_metadata;
+    if (meta?.full_name) return (meta.full_name as string).split(" ")[0];
+    if (meta?.name) return (meta.name as string).split(" ")[0];
+    if (user?.email) return user.email.split("@")[0];
+    return null;
+  })();
 
   const load = async () => {
     const [{ data: t }, { data: b }] = await Promise.all([
@@ -58,6 +69,7 @@ function DashboardPage() {
     const today = format(new Date(), "yyyy-MM-dd");
     const { data: s } = await supabase.from("morning_sessions").select("id").eq("date", today).eq("completed", true).maybeSingle();
     setHasSession(!!s);
+    setTodaySessionId(s?.id ?? null);
   };
 
   useEffect(() => { load(); }, []);
@@ -93,14 +105,19 @@ function DashboardPage() {
       </div>
 
       {hasSession === false && (
-        <Link to="/morning"
-          className="mt-5 w-full text-left rounded-xl border border-border bg-card hover:bg-accent/40 transition-colors p-5 flex items-center gap-4">
-          <div className="h-10 w-10 rounded-lg bg-primary text-primary-foreground flex items-center justify-center">
-            <Sparkles className="h-5 w-5" />
-          </div>
-          <div className="flex-1">
-            <div className="font-medium">Start your day →</div>
-            <div className="text-sm text-muted-foreground">Your AI check-in takes 2 minutes</div>
+        <Link to="/morning" className="mt-5 w-full flex rounded-xl overflow-hidden group">
+          <div className="w-1 bg-amber-400 shrink-0" />
+          <div className="flex-1 bg-amber-50 border border-amber-200 border-l-0 rounded-r-xl p-5 flex items-center gap-4 group-hover:bg-amber-100/70 transition-colors">
+            <div className="h-10 w-10 rounded-lg bg-amber-100 text-amber-600 flex items-center justify-center shrink-0">
+              <Sparkles className="h-5 w-5" />
+            </div>
+            <div className="flex-1">
+              <div className="font-semibold text-foreground">
+                {firstName ? `Good morning, ${firstName}. Ready to plan your day?` : "Ready to plan your day?"}
+              </div>
+              <div className="text-sm text-muted-foreground mt-0.5">Your AI check-in takes about 2 minutes.</div>
+            </div>
+            <ArrowRight className="h-5 w-5 text-amber-500 shrink-0" />
           </div>
         </Link>
       )}
@@ -113,6 +130,12 @@ function DashboardPage() {
       )}
 
       <div className="mt-6">
+        {todaySessionId && tasks.some((t) => t.session_id === todaySessionId) && (
+          <div className="flex items-center gap-1.5 mb-3">
+            <span className="h-1.5 w-1.5 rounded-full bg-green-500" />
+            <span className="text-xs text-muted-foreground">Tasks from today's check-in</span>
+          </div>
+        )}
         {filtered.length === 0 ? (
           <EmptyState onAdd={() => { setEditing(null); setPanelOpen(true); }} />
         ) : view === "list" ? (
