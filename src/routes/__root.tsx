@@ -33,11 +33,15 @@ export const Route = createRootRoute({
       { title: "Daytask — Smart daily task manager" },
       { name: "description", content: "A smart daily task manager for design agency founders juggling multiple client brands." },
       { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Daytask" },
-      { property: "og:description", content: "Smart daily task manager for multi-brand work." },
+      { property: "og:title", content: "Daytask — Smart daily task manager" },
+      { property: "og:description", content: "A smart daily task manager for design agency founders juggling multiple client brands." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "twitter:site", content: "@Lovable" },
+      { name: "twitter:title", content: "Daytask — Smart daily task manager" },
+      { name: "twitter:description", content: "A smart daily task manager for design agency founders juggling multiple client brands." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/84087655-5444-4e0d-95dd-b736a7eb0560/id-preview-7ec0086f--0302bb7c-119a-4dd1-a516-f197e69fc893.lovable.app-1777840970012.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/84087655-5444-4e0d-95dd-b736a7eb0560/id-preview-7ec0086f--0302bb7c-119a-4dd1-a516-f197e69fc893.lovable.app-1777840970012.png" },
     ],
     links: [
       {
