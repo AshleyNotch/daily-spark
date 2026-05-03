@@ -9,8 +9,32 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as MorningRouteImport } from './routes/morning'
+import { Route as DashboardRouteImport } from './routes/dashboard'
+import { Route as BrandsRouteImport } from './routes/brands'
 import { Route as IndexRouteImport } from './routes/index'
 
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MorningRoute = MorningRouteImport.update({
+  id: '/morning',
+  path: '/morning',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DashboardRoute = DashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BrandsRoute = BrandsRouteImport.update({
+  id: '/brands',
+  path: '/brands',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -19,28 +43,72 @@ const IndexRoute = IndexRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/brands': typeof BrandsRoute
+  '/dashboard': typeof DashboardRoute
+  '/morning': typeof MorningRoute
+  '/settings': typeof SettingsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/brands': typeof BrandsRoute
+  '/dashboard': typeof DashboardRoute
+  '/morning': typeof MorningRoute
+  '/settings': typeof SettingsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/brands': typeof BrandsRoute
+  '/dashboard': typeof DashboardRoute
+  '/morning': typeof MorningRoute
+  '/settings': typeof SettingsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths: '/' | '/brands' | '/dashboard' | '/morning' | '/settings'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to: '/' | '/brands' | '/dashboard' | '/morning' | '/settings'
+  id: '__root__' | '/' | '/brands' | '/dashboard' | '/morning' | '/settings'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  BrandsRoute: typeof BrandsRoute
+  DashboardRoute: typeof DashboardRoute
+  MorningRoute: typeof MorningRoute
+  SettingsRoute: typeof SettingsRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/morning': {
+      id: '/morning'
+      path: '/morning'
+      fullPath: '/morning'
+      preLoaderRoute: typeof MorningRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dashboard': {
+      id: '/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof DashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/brands': {
+      id: '/brands'
+      path: '/brands'
+      fullPath: '/brands'
+      preLoaderRoute: typeof BrandsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -53,6 +121,10 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  BrandsRoute: BrandsRoute,
+  DashboardRoute: DashboardRoute,
+  MorningRoute: MorningRoute,
+  SettingsRoute: SettingsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

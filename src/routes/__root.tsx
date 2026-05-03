@@ -1,5 +1,6 @@
 import { Outlet, Link, createRootRoute, HeadContent, Scripts } from "@tanstack/react-router";
-
+import { Toaster } from "@/components/ui/sonner";
+import { AuthProvider } from "@/lib/auth";
 import appCss from "../styles.css?url";
 
 function NotFoundComponent() {
@@ -29,11 +30,11 @@ export const Route = createRootRoute({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
-      { name: "description", content: "Lovable Generated Project" },
+      { title: "Daytask — Smart daily task manager" },
+      { name: "description", content: "A smart daily task manager for design agency founders juggling multiple client brands." },
       { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "Lovable Generated Project" },
+      { property: "og:title", content: "Daytask" },
+      { property: "og:description", content: "Smart daily task manager for multi-brand work." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "twitter:site", content: "@Lovable" },
@@ -65,5 +66,10 @@ function RootShell({ children }: { children: React.ReactNode }) {
 }
 
 function RootComponent() {
-  return <Outlet />;
+  return (
+    <AuthProvider>
+      <Outlet />
+      <Toaster />
+    </AuthProvider>
+  );
 }
