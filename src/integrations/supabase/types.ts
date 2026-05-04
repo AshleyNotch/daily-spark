@@ -14,6 +14,63 @@ export type Database = {
   }
   public: {
     Tables: {
+      brand_memory: {
+        Row: {
+          brand_id: string
+          created_at: string
+          id: string
+          incomplete_task_titles: string[]
+          session_date: string
+          session_id: string | null
+          session_notes: string | null
+          tasks_completed: number
+          tasks_created: number
+          tasks_incomplete: number
+          user_id: string
+        }
+        Insert: {
+          brand_id: string
+          created_at?: string
+          id?: string
+          incomplete_task_titles?: string[]
+          session_date: string
+          session_id?: string | null
+          session_notes?: string | null
+          tasks_completed?: number
+          tasks_created?: number
+          tasks_incomplete?: number
+          user_id: string
+        }
+        Update: {
+          brand_id?: string
+          created_at?: string
+          id?: string
+          incomplete_task_titles?: string[]
+          session_date?: string
+          session_id?: string | null
+          session_notes?: string | null
+          tasks_completed?: number
+          tasks_created?: number
+          tasks_incomplete?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "brand_memory_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "brand_memory_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "morning_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       brands: {
         Row: {
           active_deliverables: string | null
@@ -22,7 +79,7 @@ export type Database = {
           description: string | null
           id: string
           name: string
-          user_id: string
+          user_id: string | null
         }
         Insert: {
           active_deliverables?: string | null
@@ -31,7 +88,7 @@ export type Database = {
           description?: string | null
           id?: string
           name: string
-          user_id: string
+          user_id?: string | null
         }
         Update: {
           active_deliverables?: string | null
@@ -40,7 +97,7 @@ export type Database = {
           description?: string | null
           id?: string
           name?: string
-          user_id?: string
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -53,7 +110,7 @@ export type Database = {
           focus_brands: string[] | null
           id: string
           notes: string | null
-          user_id: string
+          user_id: string | null
         }
         Insert: {
           completed?: boolean
@@ -63,7 +120,7 @@ export type Database = {
           focus_brands?: string[] | null
           id?: string
           notes?: string | null
-          user_id: string
+          user_id?: string | null
         }
         Update: {
           completed?: boolean
@@ -73,7 +130,7 @@ export type Database = {
           focus_brands?: string[] | null
           id?: string
           notes?: string | null
-          user_id?: string
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -92,7 +149,7 @@ export type Database = {
           status: string
           title: string
           updated_at: string
-          user_id: string
+          user_id: string | null
         }
         Insert: {
           brand_id?: string | null
@@ -108,7 +165,7 @@ export type Database = {
           status?: string
           title: string
           updated_at?: string
-          user_id: string
+          user_id?: string | null
         }
         Update: {
           brand_id?: string | null
@@ -124,7 +181,7 @@ export type Database = {
           status?: string
           title?: string
           updated_at?: string
-          user_id?: string
+          user_id?: string | null
         }
         Relationships: [
           {

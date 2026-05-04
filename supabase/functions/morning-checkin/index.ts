@@ -23,10 +23,25 @@ interface SessionData {
   notes: string;
 }
 
+interface BrandMemorySession {
+  session_date: string;
+  tasks_created: number;
+  tasks_completed: number;
+  tasks_incomplete: number;
+  incomplete_task_titles: string[];
+  session_notes: string;
+}
+
+interface BrandMemoryItem {
+  brand_name: string;
+  recent_sessions: BrandMemorySession[];
+}
+
 interface RequestBody {
   messages: Array<{ role: "user" | "assistant"; content: string }>;
   brands: Brand[];
   sessionData: SessionData;
+  brandMemory?: BrandMemoryItem[];
   date: string;
 }
 
@@ -44,8 +59,11 @@ serve(async (req) => {
       );
     }
 
-    const { messages, brands, sessionData, date }: RequestBody = await req.json();
+    const { messages, brands, sessionData, brandMemory = [], date }: RequestBody =
+      await req.json();
     const { energyLevel, focusBrands, notes } = sessionData;
+
+    // ── Brand context ─────────────────────────────────────────────────────────
 
     const brandContext =
       brands.length > 0
@@ -57,10 +75,36 @@ serve(async (req) => {
             .join("\n")
         : "No brands configured yet.";
 
+    // ── Brand memory section (omitted entirely if empty) ──────────────────────
+
+    const memorySection =
+      brandMemory.length > 0
+        ? `\nBrand memory from recent sessions:\n${brandMemory
+            .map((b) => {
+              const sessionLines = b.recent_sessions
+                .map((s) => {
+                  const unfinished =
+                    s.incomplete_task_titles.length > 0
+                      ? `Still unfinished: ${s.incomplete_task_titles.join(", ")}`
+                      : "All tasks completed";
+                  const noteLine = s.session_notes
+                    ? `\n    Notes: ${s.session_notes}`
+                    : "";
+                  return `  - ${s.session_date}: ${s.tasks_created} tasks created, ${s.tasks_completed} completed, ${s.tasks_incomplete} incomplete\n    ${unfinished}${noteLine}`;
+                })
+                .join("\n");
+              return `${b.brand_name}:\n${sessionLines}`;
+            })
+            .join("\n\n")}\n\nUse this memory to:\n- Carry forward unfinished tasks if they are still relevant\n- Avoid creating duplicates for work already in progress\n- Notice patterns (brand consistently has incomplete tasks → suggest fewer tasks today)\n- Reference past context naturally when it helps`
+        : "";
+
+    // ── System prompt ─────────────────────────────────────────────────────────
+
     const systemPrompt = `You are a morning productivity assistant for a design agency founder. The user just completed their morning check-in. Generate a focused, realistic task list for today (${date}).
 
 Client brands:
 ${brandContext}
+${memorySection}
 
 Check-in summary:
 - Energy: ${energyLevel}/10
@@ -80,14 +124,18 @@ Rules:
 - brand_id: exact UUID from the list above, or null
 - status: always "todo"`;
 
-    // Use the conversation for context; append a clean generation trigger
+    // ── Build Claude messages ─────────────────────────────────────────────────
+
     const claudeMessages = [
       ...messages,
       {
         role: "user" as const,
-        content: "Based on our conversation, please generate my task list for today as a JSON array.",
+        content:
+          "Based on our conversation, please generate my task list for today as a JSON array.",
       },
     ];
+
+    // ── Call Anthropic ────────────────────────────────────────────────────────
 
     const res = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",

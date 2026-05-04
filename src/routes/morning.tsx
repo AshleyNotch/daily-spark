@@ -47,6 +47,20 @@ type GeneratedTask = {
   status: string;
 };
 
+type BrandMemorySession = {
+  session_date: string;
+  tasks_created: number;
+  tasks_completed: number;
+  tasks_incomplete: number;
+  incomplete_task_titles: string[];
+  session_notes: string;
+};
+
+type BrandMemoryItem = {
+  brand_name: string;
+  recent_sessions: BrandMemorySession[];
+};
+
 // ── Utilities ─────────────────────────────────────────────────────────────────
 
 let _id = 0;
@@ -259,6 +273,51 @@ function MorningPage() {
       }));
 
     try {
+      // Fetch brand memory for focused brands only
+      let brandMemory: BrandMemoryItem[] = [];
+      const focusNames = focusBrandsRef.current;
+      if (focusNames.length > 0) {
+        const focusBrandIds = brands
+          .filter((b) => focusNames.includes(b.name))
+          .map((b) => b.id);
+
+        if (focusBrandIds.length > 0) {
+          const { data: memRows } = await supabase
+            .from("brand_memory")
+            .select(
+              "brand_id, session_date, tasks_created, tasks_completed, tasks_incomplete, incomplete_task_titles, session_notes"
+            )
+            .in("brand_id", focusBrandIds)
+            .order("session_date", { ascending: false });
+
+          if (memRows && memRows.length > 0) {
+            const grouped = new Map<string, typeof memRows[number][]>();
+            for (const row of memRows) {
+              const arr = grouped.get(row.brand_id) ?? [];
+              if (arr.length < 3) {
+                arr.push(row);
+                grouped.set(row.brand_id, arr);
+              }
+            }
+            for (const [brandId, rows] of grouped) {
+              const brand = brands.find((b) => b.id === brandId);
+              if (!brand) continue;
+              brandMemory.push({
+                brand_name: brand.name,
+                recent_sessions: rows.map((r) => ({
+                  session_date: r.session_date,
+                  tasks_created: r.tasks_created,
+                  tasks_completed: r.tasks_completed,
+                  tasks_incomplete: r.tasks_incomplete,
+                  incomplete_task_titles: r.incomplete_task_titles ?? [],
+                  session_notes: r.session_notes ?? "",
+                })),
+              });
+            }
+          }
+        }
+      }
+
       const { data, error } = await supabase.functions.invoke("morning-checkin", {
         body: {
           messages: conversationMsgs,
@@ -273,6 +332,7 @@ function MorningPage() {
             focusBrands: focusBrandsRef.current,
             notes: deadlineRef.current,
           },
+          brandMemory: brandMemory.length > 0 ? brandMemory : undefined,
           date: today,
         },
       });
@@ -310,6 +370,64 @@ function MorningPage() {
       });
 
       setStep("error");
+    }
+  };
+
+  // ── Write brand memory (silent, fire-and-forget) ──────────────────────────
+
+  const writeBrandMemory = async (tasks: GeneratedTask[], sessionId: string | null) => {
+    try {
+      if (!user?.id) return;
+
+      // Group this session's tasks by resolved brand_id
+      const tasksByBrand = new Map<string, string[]>();
+      for (const task of tasks) {
+        if (!task.brand_id) continue;
+        const arr = tasksByBrand.get(task.brand_id) ?? [];
+        arr.push(task.title);
+        tasksByBrand.set(task.brand_id, arr);
+      }
+      if (tasksByBrand.size === 0) return;
+
+      // Fetch current status of ALL tasks for these brands
+      const brandIds = Array.from(tasksByBrand.keys());
+      const { data: allBrandTasks } = await supabase
+        .from("tasks")
+        .select("brand_id, title, status")
+        .in("brand_id", brandIds);
+
+      const sessionDate = format(new Date(), "yyyy-MM-dd");
+      const rows = [];
+
+      for (const [brandId, createdTitles] of tasksByBrand) {
+        const brand = brands.find((b) => b.id === brandId);
+        const allForBrand = (allBrandTasks ?? []).filter((t) => t.brand_id === brandId);
+        const completedCount = allForBrand.filter((t) => t.status === "done").length;
+        const incompleteRows = allForBrand.filter((t) => t.status !== "done");
+
+        const brandNotes =
+          brand && deadlineRef.current.toLowerCase().includes(brand.name.toLowerCase())
+            ? deadlineRef.current
+            : null;
+
+        rows.push({
+          user_id: user.id,
+          brand_id: brandId,
+          session_id: sessionId,
+          session_date: sessionDate,
+          tasks_created: createdTitles.length,
+          tasks_completed: completedCount,
+          tasks_incomplete: incompleteRows.length,
+          incomplete_task_titles: incompleteRows.slice(0, 10).map((t) => t.title),
+          session_notes: brandNotes,
+        });
+      }
+
+      if (rows.length > 0) {
+        await supabase.from("brand_memory").insert(rows as never);
+      }
+    } catch {
+      // fail silently — tasks are more important than memory
     }
   };
 
@@ -358,6 +476,9 @@ function MorningPage() {
           }) as never
         );
       }
+
+      // Write memory silently — don't await, don't block summary
+      writeBrandMemory(tasks, sid);
 
       setSummaryTasks(tasks);
       setIsSubmitting(false);

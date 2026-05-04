@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { format, parseISO } from "date-fns";
 import { Plus, Pencil, Trash2 } from "lucide-react";
 import AppLayout from "@/components/AppLayout";
 import { supabase } from "@/integrations/supabase/client";
@@ -23,9 +24,17 @@ type Brand = {
   active_deliverables: string | null; color: string;
 };
 
+type BrandMemorySummary = {
+  totalCompleted: number;
+  totalSessions: number;
+  lastSessionDate: string | null;
+  lastSessionIncomplete: number;
+};
+
 function BrandsPage() {
   const [brands, setBrands] = useState<Brand[]>([]);
   const [counts, setCounts] = useState<Record<string, number>>({});
+  const [memorySummary, setMemorySummary] = useState<Record<string, BrandMemorySummary>>({});
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Brand | null>(null);
 
@@ -40,6 +49,31 @@ function BrandsPage() {
       if (x.brand_id) c[x.brand_id] = (c[x.brand_id] ?? 0) + 1;
     });
     setCounts(c);
+
+    const { data: mem } = await supabase
+      .from("brand_memory")
+      .select("brand_id, session_date, tasks_completed, tasks_incomplete")
+      .order("session_date", { ascending: false });
+
+    if (mem) {
+      const summary: Record<string, BrandMemorySummary> = {};
+      for (const row of mem) {
+        const s = summary[row.brand_id] ?? {
+          totalCompleted: 0,
+          totalSessions: 0,
+          lastSessionDate: null,
+          lastSessionIncomplete: 0,
+        };
+        s.totalCompleted += row.tasks_completed;
+        s.totalSessions += 1;
+        if (!s.lastSessionDate) {
+          s.lastSessionDate = row.session_date;
+          s.lastSessionIncomplete = row.tasks_incomplete;
+        }
+        summary[row.brand_id] = s;
+      }
+      setMemorySummary(summary);
+    }
   };
 
   useEffect(() => { load(); }, []);
@@ -80,6 +114,24 @@ function BrandsPage() {
               <div className="mt-4 text-xs text-muted-foreground line-clamp-1">
                 <span className="font-medium text-foreground">Active: </span>{b.active_deliverables || "—"}
               </div>
+              {memorySummary[b.id] && (
+                <div className="mt-4 pt-3 border-t border-border/60 space-y-1">
+                  <div className="text-xs text-muted-foreground">
+                    {memorySummary[b.id].totalCompleted} tasks completed across{" "}
+                    {memorySummary[b.id].totalSessions} session{memorySummary[b.id].totalSessions !== 1 ? "s" : ""}
+                  </div>
+                  {memorySummary[b.id].lastSessionIncomplete > 0 && (
+                    <div className="text-xs text-amber-600 font-medium">
+                      ⚠ {memorySummary[b.id].lastSessionIncomplete} unfinished from last session
+                    </div>
+                  )}
+                  {memorySummary[b.id].lastSessionDate && (
+                    <div className="text-xs text-muted-foreground">
+                      Last session: {format(parseISO(memorySummary[b.id].lastSessionDate!), "MMM d")}
+                    </div>
+                  )}
+                </div>
+              )}
               <div className="mt-4 pt-4 border-t border-border flex items-center justify-between">
                 <span className="text-xs text-muted-foreground">{counts[b.id] ?? 0} tasks</span>
                 <div className="flex gap-1">
